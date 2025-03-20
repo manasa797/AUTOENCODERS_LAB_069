@@ -125,3 +125,18 @@ for i in a:
     plt.imshow(x_test[i].reshape(28,28),cmap='gray')
     plt.title(labels[y_test[5000:][i]],color="green",fontsize=12)
     c+=1
+
+from sklearn.metrics import mean_squared_error
+
+# Predict the denoised images using the trained autoencoder model
+predicted_images = autoencoder.predict(noise_test.reshape(-1, 28, 28, 1))
+
+# Flatten the images to calculate the MSE (Mean Squared Error) between the original and reconstructed images
+original_images_flattened = x_test.reshape(-1, 28 * 28)
+predicted_images_flattened = predicted_images.reshape(-1, 28 * 28)
+
+# Calculate MSE for each image
+mse_loss = mean_squared_error(original_images_flattened, predicted_images_flattened)
+
+# Calculate the overall MSE loss
+print(f"Reconstructed Loss (Mean Squared Error): {mse_loss:.4f}")
