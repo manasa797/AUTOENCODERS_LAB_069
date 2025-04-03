@@ -1,0 +1,76 @@
+A>import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.neural_network import BernoulliRBM
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import fetch_openml
+
+# Step 1: Load MNIST Dataset
+mnist = fetch_openml('mnist_784', version=1)
+X, y = mnist.data, mnist.target.astype(int)
+
+# Step 2: Normalize the data (RBM expects values between 0 and 1)
+X = MinMaxScaler().fit_transform(X)
+
+# Step 3: Split into Train and Test Set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Define and Train the RBM Model
+rbm = BernoulliRBM(n_components=100, learning_rate=0.01, batch_size=10, n_iter=10, random_state=42)
+rbm.fit(X_train)
+
+# Step 5: Extract Features from RBM
+X_train_rbm = rbm.transform(X_train)
+X_test_rbm = rbm.transform(X_test)
+
+# Step 6: Train Logistic Regression using RBM Features
+classifier = LogisticRegression(max_iter=1000, solver='lbfgs', multi_class='multinomial', random_state=42)
+classifier.fit(X_train_rbm, y_train)
+
+# Step 7: Evaluate the Model
+accuracy = classifier.score(X_test_rbm, y_test)
+print(f"Classification Accuracy using RBM Features: {accuracy:.4f}")
+
+
+B>USING SCAKS IMPLEMETING RBM
+
+
+import numpy as np
+from sklearn.neural_network import BernoulliRBM
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import fetch_openml
+
+# Step 1: Load and Normalize MNIST Dataset
+mnist = fetch_openml('mnist_784', version=1)
+X, y = mnist.data, mnist.target.astype(int)
+X = MinMaxScaler().fit_transform(X)  # Normalize to [0,1]
+
+# Step 2: Split into Train and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 3: Define Two RBMs for Stacked Learning
+rbm1 = BernoulliRBM(n_components=256, learning_rate=0.01, batch_size=10, n_iter=10, random_state=42)
+rbm2 = BernoulliRBM(n_components=128, learning_rate=0.01, batch_size=10, n_iter=10, random_state=42)
+
+# Step 4: Train First RBM
+rbm1.fit(X_train)
+X_train_rbm1 = rbm1.transform(X_train)
+X_test_rbm1 = rbm1.transform(X_test)
+
+# Step 5: Train Second RBM on Features from First RBM
+rbm2.fit(X_train_rbm1)
+X_train_rbm2 = rbm2.transform(X_train_rbm1)
+X_test_rbm2 = rbm2.transform(X_test_rbm1)
+
+# Step 6: Train a Classifier (Logistic Regression) on Extracted Features
+classifier = LogisticRegression(max_iter=1000, solver='lbfgs', multi_class='multinomial', random_state=42)
+classifier.fit(X_train_rbm2, y_train)
+
+# Step 7: Evaluate the Model
+accuracy = classifier.score(X_test_rbm2, y_test)
+print(f"Classification Accuracy using Stacked RBM Features: {accuracy:.4f}")
